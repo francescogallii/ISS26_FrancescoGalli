@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<link rel="stylesheet" type="text/css" href="css/mystyle.css">
+<!--
+    <script type="text/javascript" src="../css/issStyle.js"></script>
+-->
+    
+</head>
+<title>Sprint1: conway26Java_v0</title>
+ 
+    
+
+<body>
+<div id="top">
+<h1>ConwayLife Sprint1</h1>
+</div>  
+
+<div class="body">  
+
+<h2>Introduction</h2>
+<b>Goal</b>: Realizzazione in Java del
+<a href='https://anatali.github.io/issLab2026/_static/docs/Protobook.pdf#chapter.6'>GAME OF LIFE DI CONWAY</a>
+limitatamente al <b>requisito  R1</b>.
+
+<h2>Requirements</h2>
+
+ 
+<!-- <div class="remark"> -->
+<pre>
+R1  Realizzare una versione in Java del gioco Life di Conway, come gioco zero-player. 
+    Il gioco consiste nell’introdurre una Griglia di Celle il cui stato (cella ‘viva’ o cella ‘morta’) 
+    evolve come stabilito dallle regole di ConwayLife
+
+R2  L’utente umano deve poter:
+     - specificare la configurazione iniziale della griglia del gioco	
+     - vedere l’evoluzione del gioco in forma opportuna 
+        (si veda <a href='https://anatali.github.io/issLab2026/_static/docs/Protobook.pdf#section.6.3'>Problema della vista del gioco</a> )
+     - fermare e far ripartire l’evoluzione del gioco
+     - pulire (a gioco fermo) la configurazione della griglia del gioco
+
+</pre>
+  
+
+<h2>Requirement analysis</h2>
+
+<!-- Definizione entità citate nei requisiti (cosa intende il committente per Cell, Grid, Life?) -->
+
+<pre>
+
+// La cella è dotata di uno stato (viva o morta) e può essere impostata con opportuni accessori
+public interface ICell {
+	void setStatus(boolean v); //primitiva
+	boolean isAlive(); //primitiva
+	void switchCellState(); //composta
+}
+
+
+// La griglia è un'insieme di celle di dimensione decisa dall'utente.
+// Possiede accessori per impostare (set) ed estrarre (get) lo stato di ogni cella.
+public interface IGrid {
+	  public int getRowsNum(); // primitiva
+	  public int getColsNum(); // primitiva
+	  public void setCellValue(int x, int y, boolean state); // composta
+	  public ICell getCell(int x, int y); // primitiva
+	  public boolean getCellValue(int x, int y); // composta
+	  public void reset(); // composta
+}
+
+
+
+// Life è un sistema che si occupa dell'evoluzione della griglia seguendo le regole del gioco.
+public interface LifeInterface {
+	/** Calcola l'evoluzione dello stato alla generazione successiva */
+    void nextGeneration(); // primitiva
+
+    /** Restituisce lo stato di una cella specifica */
+    boolean isAlive(int row, int col); // composta
+
+    /** Imposta lo stato di una cella */
+    void setCell(int row, int col, boolean alive); // composta
+
+    /** Restituisce il numero di righe e colonne */
+//    int getRows();
+//    int getCols();
+    
+    /** Restituisce la Cella */
+    ICell getCell(int x, int y); // composta
+    
+    /** Restituisce la grid */
+    IGrid getGrid(); // primitiva
+    
+    /** imposta tutte le celle della griglia allo stato morto*/
+    void resetGrids(); // composta
+    
+    /** Restituisce una rappresentazione grafica testuale della grglia*/
+    //public String gridRep( );
+}
+
+</pre>
+
+<h2>Problem analysis</h2>
+
+<img src="./img/problemAnalysis.jpg" alt="photo" width="75%">
+
+<h2>Test plans</h2> 
+
+<pre>
+
+public class CellTest {
+private ICell c;
+
+	@Before
+	public void setup() {
+		System.out.println("ConwayLifeTest | setup");	
+	    c = new Cell();
+	}
+	@After
+	public void down() {
+		System.out.println("ConwayLifeTest | down");
+	}
+	
+	@Test
+	public void testCellAlive() {
+		System.out.println("ConwayLifeTest | doing alive");
+		c.setStatus(true);
+		boolean r = c.isAlive();
+		assertTrue(r);
+		
+	}
+	
+	@Test
+	public void testCellDead() {
+		System.out.println("ConwayLifeTest | doing dead");
+		c.setStatus(false);
+		boolean r = c.isAlive();
+		assertTrue( !r);
+	}	
+}
+
+public class GridTest {
+	private static final int nRows=5;
+	private static final int nCols=5;
+	
+private Grid grid;
+
+	@Before
+	public void setup() {
+		System.out.println("GridTest | setup");	
+		grid= new Grid(nRows,nCols);
+	}
+	@After
+	public void down() {
+		System.out.println("GridTest | down");
+	}
+	
+	@Test
+	public void testDims() {
+		System.out.println("testDims ---------------------" );
+		int nr = grid.getRowsNum();
+		int nc = grid.getColsNum();
+		assertTrue( nr==nRows && nc==nCols );
+	}
+	@Test
+	public void testCGridCellValue() {
+		System.out.println("testCGridCellValue ---------------------" );
+		grid.setCellValue(0,0,true);
+		assertTrue(   grid.getCellValue(0,0) );
+		assertFalse(  grid.getCellValue(0,1) );
+	}
+	@Test
+	public void testGridRep() {
+		System.out.println("testGridRep ---------------------" );
+ 		System.out.println(""+grid);
+		assertTrue( grid.toString().startsWith(". . . . ."));
+	}
+	@Test
+	public void testPrintGrid() {
+		System.out.println("testPrintGrid ---------------------" );
+		grid.setCellValue(0,0,true);
+		grid.setCellValue(0,1,true);
+		grid.setCellValue(0,2,true);
+		grid.setCellValue(0,3,true);
+		grid.setCellValue(0,4,true);
+		//grid.printGrid();
+	}
+
+}
+
+package main.java.test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import main.java.conway.domain.Life;
+import main.java.conway.domain.LifeInterface;
+ 
+/*
+ * TEST PLAN
+ */
+public class LifeTest {
+private LifeInterface lifeModel;
+
+	@Before
+	public void setup() {
+		System.out.println("GridTest | setup");	
+		lifeModel = new Life(5, 5);	
+	}
+	
+	@After
+	public void down() {
+		System.out.println("GridTest | down");
+	}
+	
+	@Test
+	public void testSetCellAlive() {
+		lifeModel.setCell(1, 1, true);
+		assertTrue(lifeModel.isAlive(1, 1));
+	}
+	
+	@Test
+	public void testSetCellDead() {
+		lifeModel.setCell(2, 2, true); 
+		lifeModel.setCell(2, 2, false);
+		assertFalse(lifeModel.isAlive(2, 2));
+	}
+	
+	@Test
+	public void testReset() {
+		lifeModel.setCell(3, 3, true);
+		lifeModel.resetGrids();
+		assertFalse(lifeModel.isAlive(3, 3));
+	}
+
+}
+
+
+</pre>
+
+<h2>Project</h2> 
+
+<h2>Testing</h2> 
+
+<h2>Deployment</h2> 
+ 
+<h2>Maintenance</h2> 
+ 
+<!-- USEFUL
+<table style="width:100%" border="1">
+<tr>
+<td style="width:50%">
+</td>
+<td></td>
+</tr>
+</table>
+-->
+	      	
+<br/><br/> 	
+</div>  
+
+<div style="background-color:rgba(86, 56, 253, 0.9); width:60%;text-align:left;color:white">
+By Francesco Galli email: francesco.galli16@studio.unibo.it, 
+<!-- <img src="./img/mbot-S.jpg" alt="mbot" width="15%" height="15%"> -->
+<img src="./img/fotoProfilo.jpg" alt="photo" width="15%" height="15%">
+GIT repo: https://github.com/francescogallii/ISS26_FrancescoGalli.git
+</div> 
+</body>
+</html>
